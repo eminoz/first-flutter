@@ -1,117 +1,68 @@
-import 'package:english_words/english_words.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// ignore_for_file: prefer_const_constructors, prefer_interpolation_to_compose_strings
 
+import 'package:first/models/student.dart';
+import 'package:flutter/material.dart';
+
+//for ios cupertino
+//for android material
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.black26),
-        ),
-        home: MyHomePage(),
-      ),
-    );
+    return MaterialApp(home: HomeScreen());
   }
 }
 
-class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
-  void getNewWord() {
-    current = WordPair.random();
-    notifyListeners();
-  }
-
-  var favorites = <WordPair>[];
-
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
-    notifyListeners();
-  }
-}
-
-class MyHomePage extends StatelessWidget {
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 10),
-            BigCard(pair: pair),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    appState.getNewWord();
-                  },
-                  child: Text('Next'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.toggleFavorite();
-                  },
-                  icon: Icon(icon),
-                  label: Text('Favorite'),
-                )
-              ],
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text("Başlık"),
       ),
+      body: buildBody(),
     );
   }
 }
 
-class BigCard extends StatelessWidget {
-  const BigCard({
-    super.key,
-    required this.pair,
-  });
+Widget buildBody() {
+  List<Student> students = [
+    Student.withId(
+        id: 1, name: "Ali", lastName: "Veli", grade: 100, status: "Aktif"),
+    Student.withId(
+        id: 2, name: "Ayşe", lastName: "Fatma", grade: 30, status: "Pasif"),
+  ];
 
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-    var style = theme.textTheme.displayMedium!
-        .copyWith(color: theme.colorScheme.onSecondary);
-
-    return Card(
-      color: theme.colorScheme.secondary,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          pair.asLowerCase,
-          style: style,
-          semanticsLabel: pair.asPascalCase,
+  return Column(
+    children: <Widget>[
+      Expanded(
+        child: ListView.builder(
+          itemCount: students.length,
+          itemBuilder: (BuildContext context, int index) {
+            return ListTile(
+              title:
+                  Text(students[index].name + " " + students[index].lastName),
+              subtitle: Text(students[index].getStatus),
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(
+                    "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png"),
+              ),
+              trailing: buildStatusIcon(students[index].grade),
+            );
+          },
         ),
-      ),
-    );
-  }
+      )
+    ],
+  );
+}
+
+Widget buildStatusIcon(int grade) {
+  return grade >= 50
+      ? Icon(Icons.done)
+      : grade >= 40
+          ? Icon(Icons.album)
+          : Icon(Icons.clear);
 }
