@@ -16,15 +16,21 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _HomeScreenState();
+  }
+}
+
+class _HomeScreenState extends State {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Başlık"),
-      ),
-      body: buildBody(),
-    );
+        appBar: AppBar(
+          title: const Text("Başlık"),
+        ),
+        body: buildBody());
   }
 }
 
@@ -35,7 +41,8 @@ Widget buildBody() {
     Student.withId(
         id: 2, name: "Ayşe", lastName: "Fatma", grade: 30, status: "Pasif"),
   ];
-
+  Student selectedStudent =
+      Student.withId(id: 0, name: "", lastName: "", grade: 0, status: "");
   return Column(
     children: <Widget>[
       Expanded(
@@ -51,10 +58,17 @@ Widget buildBody() {
                     "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png"),
               ),
               trailing: buildStatusIcon(students[index].grade),
+              onTap: () {
+                //chenge state
+                setState(() {
+                  selectedStudent = students[index];
+                });
+              },
             );
           },
         ),
-      )
+      ),
+      Text("secili öğrenci:" + selectedStudent.name),
     ],
   );
 }
