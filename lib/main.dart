@@ -1,114 +1,80 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
-import 'package:first/models/todo.dart';
-import 'package:first/screens/messages.dart';
-import 'package:first/screens/timeline.dart';
+import 'package:first/models/user.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserModel(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      home: HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  final List<Message> todos = [
-    Message(
-      "https://picsum.photos/250?image=2",
-      'Mehmet emin ',
-      'Flutter öğrenmek için bir uygulama yap.',
-    ),
-    Message(
-      "https://picsum.photos/250?image=4",
-      'Mehmet öz',
-      'Flutter öğrenmek için bir uygulama yap.',
-    ),
-    Message(
-      "https://picsum.photos/250?image=1",
-      'emin öz',
-      'Flutter öğrenmek için bir uygulama yap.',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => RouterLinksPage()));
-            },
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.favorite),
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => FavoritesPage()));
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.notifications),
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => NotificationPAge()));
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.message),
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => MessagesPage(
-                              todo: todos,
-                            )));
-              },
-            ),
-          ],
-        ),
-        body: ListView(
-          children: [
-            IGTimeline(
-              imagelink: 'https://picsum.photos/250?image=4',
-            ),
-            IGTimeline(
-              imagelink: 'https://picsum.photos/250?image=13',
-            ),
-          ],
-        ));
-  }
-}
-
-class RouterLinksPage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Router Linkleri'),
+        title: Text('Provider Örneği'),
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text('Kullanıcı Ayarla'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserSetter()),
+              );
+            },
+          ),
+          ListTile(
+            title: Text('Kullanıcı Bilgileri'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserGetter()),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class UserGetter extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Kullanıcı Bilgileri'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Burada router linkleri bulunabilir.'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                print('Ana sayfaya git butonuna tıklandı!');
-              },
-              child: Text('Başka Sayfaya Git'),
+            Text(
+              'Kullanıcı Adı: ${Provider.of<UserModel>(context).username}',
+              style: TextStyle(fontSize: 20),
+            ),
+            Text(
+              'E-Posta: ${Provider.of<UserModel>(context).email}',
+              style: TextStyle(fontSize: 20),
+            ),
+            Text(
+              'Yaş: ${Provider.of<UserModel>(context).age}',
+              style: TextStyle(fontSize: 20),
             ),
           ],
         ),
@@ -117,29 +83,49 @@ class RouterLinksPage extends StatelessWidget {
   }
 }
 
-class FavoritesPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Favoriler'),
-      ),
-      body: Center(
-        child: Text('Favoriler içeriği burada.'),
-      ),
-    );
-  }
-}
+class UserSetter extends StatelessWidget {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
 
-class NotificationPAge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bildirimler'),
+        title: Text('Kullanıcı Ayarlama'),
       ),
-      body: Center(
-        child: Text('Bildirimler içeriği burada.'),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _usernameController,
+              decoration: InputDecoration(labelText: 'Kullanıcı Adı'),
+            ),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(labelText: 'E-Posta'),
+            ),
+            TextField(
+              controller: _ageController,
+              decoration: InputDecoration(labelText: 'Yaş'),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Provider.of<UserModel>(context, listen: false).setUser(
+                  _usernameController.text,
+                  _emailController.text,
+                  int.tryParse(_ageController.text) ?? 0,
+                );
+                Navigator.pop(context);
+              },
+              child: Text('Kullanıcı Ayarla'),
+            ),
+          ],
+        ),
       ),
     );
   }
