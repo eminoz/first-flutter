@@ -1,10 +1,10 @@
-// ignore_for_file: prefer_const_constructors, prefer_interpolation_to_compose_strings
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
-import 'package:first/models/student.dart';
+import 'package:first/models/todo.dart';
+import 'package:first/screens/messages.dart';
+import 'package:first/screens/timeline.dart';
 import 'package:flutter/material.dart';
 
-//for ios cupertino
-//for android material
 void main() {
   runApp(MyApp());
 }
@@ -12,71 +12,135 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomeScreen());
+    return MaterialApp(
+      home: MyHomePage(),
+    );
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return _HomeScreenState();
-  }
-}
+class MyHomePage extends StatelessWidget {
+  final List<Message> todos = [
+    Message(
+      "https://picsum.photos/250?image=2",
+      'Mehmet emin ',
+      'Flutter öğrenmek için bir uygulama yap.',
+    ),
+    Message(
+      "https://picsum.photos/250?image=4",
+      'Mehmet öz',
+      'Flutter öğrenmek için bir uygulama yap.',
+    ),
+    Message(
+      "https://picsum.photos/250?image=1",
+      'emin öz',
+      'Flutter öğrenmek için bir uygulama yap.',
+    ),
+  ];
 
-class _HomeScreenState extends State {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Başlık"),
+          leading: IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => RouterLinksPage()));
+            },
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.favorite),
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => FavoritesPage()));
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => NotificationPAge()));
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.message),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MessagesPage(
+                              todo: todos,
+                            )));
+              },
+            ),
+          ],
         ),
-        body: buildBody());
+        body: ListView(
+          children: [
+            IGTimeline(
+              imagelink: 'https://picsum.photos/250?image=4',
+            ),
+            IGTimeline(
+              imagelink: 'https://picsum.photos/250?image=13',
+            ),
+          ],
+        ));
   }
 }
 
-Widget buildBody() {
-  List<Student> students = [
-    Student.withId(
-        id: 1, name: "Ali", lastName: "Veli", grade: 100, status: "Aktif"),
-    Student.withId(
-        id: 2, name: "Ayşe", lastName: "Fatma", grade: 30, status: "Pasif"),
-  ];
-  Student selectedStudent =
-      Student.withId(id: 0, name: "", lastName: "", grade: 0, status: "");
-  return Column(
-    children: <Widget>[
-      Expanded(
-        child: ListView.builder(
-          itemCount: students.length,
-          itemBuilder: (BuildContext context, int index) {
-            return ListTile(
-              title:
-                  Text(students[index].name + " " + students[index].lastName),
-              subtitle: Text(students[index].getStatus),
-              leading: CircleAvatar(
-                backgroundImage: NetworkImage(
-                    "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png"),
-              ),
-              trailing: buildStatusIcon(students[index].grade),
-              onTap: () {
-                //chenge state
-                setState(() {
-                  selectedStudent = students[index];
-                });
+class RouterLinksPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Router Linkleri'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Burada router linkleri bulunabilir.'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                print('Ana sayfaya git butonuna tıklandı!');
               },
-            );
-          },
+              child: Text('Başka Sayfaya Git'),
+            ),
+          ],
         ),
       ),
-      Text("secili öğrenci:" + selectedStudent.name),
-    ],
-  );
+    );
+  }
 }
 
-Widget buildStatusIcon(int grade) {
-  return grade >= 50
-      ? Icon(Icons.done)
-      : grade >= 40
-          ? Icon(Icons.album)
-          : Icon(Icons.clear);
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Favoriler'),
+      ),
+      body: Center(
+        child: Text('Favoriler içeriği burada.'),
+      ),
+    );
+  }
+}
+
+class NotificationPAge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bildirimler'),
+      ),
+      body: Center(
+        child: Text('Bildirimler içeriği burada.'),
+      ),
+    );
+  }
 }
