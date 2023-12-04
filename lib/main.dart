@@ -1,132 +1,83 @@
-import 'package:first/models/user.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+
+class User {
+  final String username;
+  final String email;
+
+  User({required this.username, required this.email});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'username': username,
+      'email': email,
+    };
+  }
+}
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserModel(),
-      child: MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Provider Örneği'),
-      ),
-      body: ListView(
-        children: [
-          ListTile(
-            title: Text('Kullanıcı Ayarla'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserSetter()),
-              );
-            },
-          ),
-          ListTile(
-            title: Text('Kullanıcı Bilgileri'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserGetter()),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class UserGetter extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Kullanıcı Bilgileri'),
-      ),
-      body: Center(
-        child: Column(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Post Data Example'),
+        ),
+        body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Kullanıcı Adı: ${Provider.of<UserModel>(context).username}',
-              style: TextStyle(fontSize: 20),
+            TextField(
+              controller: usernameController,
+              decoration: const InputDecoration(
+                labelText: 'Enter Username',
+              ),
             ),
-            Text(
-              'E-Posta: ${Provider.of<UserModel>(context).email}',
-              style: TextStyle(fontSize: 20),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Enter Email',
+              ),
             ),
-            Text(
-              'Yaş: ${Provider.of<UserModel>(context).age}',
-              style: TextStyle(fontSize: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  final String username = usernameController.text;
+                  final String email = emailController.text;
+                  final User user = User(username: username, email: email);
+                  postUser(user);
+                },
+                child: const Text('Submit'),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class UserSetter extends StatelessWidget {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Kullanıcı Ayarlama'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Kullanıcı Adı'),
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'E-Posta'),
-            ),
-            TextField(
-              controller: _ageController,
-              decoration: InputDecoration(labelText: 'Yaş'),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Provider.of<UserModel>(context, listen: false).setUser(
-                  _usernameController.text,
-                  _emailController.text,
-                  int.tryParse(_ageController.text) ?? 0,
-                );
-                Navigator.pop(context);
-              },
-              child: Text('Kullanıcı Ayarla'),
-            ),
-          ],
-        ),
-      ),
+  Future<void> postUser(User user) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:3000/createuser'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(user.toJson()),
     );
+
+    if (response.statusCode == 201) {
+      // Başarılı ise, oluşturulan kullanıcı hakkında bilgiyi yazdır
+      print('User created successfully: ${response.body}');
+    } else {
+      // Başarısız ise, hata bilgisini yazdır
+      print('Failed to create user. Error: ${response.statusCode}');
+    }
   }
 }

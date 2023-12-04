@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
+class User {
+  final int id;
+  final String username;
+  final String email;
 
-class UserModel extends ChangeNotifier {
-  String username = '';
-  String email = '';
-  int age = 0;
+  User({required this.id, required this.username, required this.email});
 
-  void setUser(String username, String email, int age) {
-    this.username = username;
-    this.email = email;
-    this.age = age;
-    notifyListeners();
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      username: json['username'],
+      email: json['email'],
+    );
   }
 }
