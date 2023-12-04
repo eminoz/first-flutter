@@ -1,18 +1,61 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import 'models/user.dart';
 
-class User {
-  final String username;
-  final String email;
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
 
-  User({required this.username, required this.email});
+class _MyAppState extends State<MyApp> {
+  late Future<User> _userFuture;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'username': username,
-      'email': email,
-    };
+  @override
+  void initState() {
+    super.initState();
+    // initState içinde veriyi getiren fonksiyonu çağır
+    _userFuture = fetchUser();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('User Details'),
+        ),
+        body: FutureBuilder<User>(
+          future: _userFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              print("Waiting for data");
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError) {
+              // Hata oluştuysa hata mesajını göster
+              return Text('Error: ${snapshot.error}');
+            } else if (snapshot.hasData) {
+              // Veri geldiyse User bilgilerini göster
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text('ID: ${snapshot.data!.id}'),
+                  Text('Username: ${snapshot.data!.username}'),
+                  Text('Email: ${snapshot.data!.email}'),
+                ],
+              );
+            } else {
+              // Beklenmeyen bir durum
+              return Text('Unexpected error');
+            }
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -20,64 +63,19 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
+Future<User> fetchUser() async {
+  final response =
+      await http.get(Uri.parse('http://localhost:3000/getuser'), headers: {
+    "Accept": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "token": "token"
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Post Data Example'),
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Enter Username',
-              ),
-            ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Enter Email',
-              ),
-            ),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  final String username = usernameController.text;
-                  final String email = emailController.text;
-                  final User user = User(username: username, email: email);
-                  postUser(user);
-                },
-                child: const Text('Submit'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> postUser(User user) async {
-    final response = await http.post(
-      Uri.parse('http://localhost:3000/createuser'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(user.toJson()),
-    );
-
-    if (response.statusCode == 201) {
-      // Başarılı ise, oluşturulan kullanıcı hakkında bilgiyi yazdır
-      print('User created successfully: ${response.body}');
-    } else {
-      // Başarısız ise, hata bilgisini yazdır
-      print('Failed to create user. Error: ${response.statusCode}');
-    }
+  if (response.statusCode == 200) {
+    // Başarılı ise JSON'dan User objesine dönüştür
+    return User.fromJson(jsonDecode(response.body));
+  } else {
+    // Başarısız ise hata fırlat
+    throw Exception('Failed to load user');
   }
 }
